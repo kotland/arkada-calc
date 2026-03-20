@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>АРКАДА — Калькулятор</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'IBM Plex Mono', monospace;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+.logo { text-align: center; margin-bottom: 24px; }
+.logo h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #C4FF4D;
+  text-transform: uppercase;
+  font-family: 'Artery Sans Extended', 'Segoe UI', sans-serif;
+}
+.logo p { font-size: 12px; color: #666; letter-spacing: 2px; margin-top: 4px; }
+.section { background: #14141f; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid #1e1e2e; }
+.section-title {
+  font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 14px;
+  font-family: 'Artery Sans Extended', 'Segoe UI', sans-serif;
+}
+.toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.toggle-row:last-child { margin-bottom: 0; }
+.toggle-btn { flex: 1; padding: 12px 8px; border: 2px solid #2a2a3a; border-radius: 12px; background: transparent; color: #999; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+.toggle-btn:hover { border-color: #444; color: #ccc; }
+.toggle-btn.active { border-color: #C4FF4D; color: #C4FF4D; background: rgba(196,255,77,0.08); }
+.toggle-btn.pkg-easy.active { border-color: #4DDBFF; color: #4DDBFF; background: rgba(77,219,255,0.08); }
+.toggle-btn.pkg-normal.active { border-color: #FFD84D; color: #FFD84D; background: rgba(255,216,77,0.08); }
+.toggle-btn.pkg-hard.active { border-color: #FF4D6A; color: #FF4D6A; background: rgba(255,77,106,0.08); }
+.number-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.number-row:last-child { margin-bottom: 0; }
+.number-row label { font-size: 14px; color: #aaa; flex: 1; }
+.number-controls { display: flex; align-items: center; background: #1e1e2e; border-radius: 12px; overflow: hidden; }
+.num-btn { width: 44px; height: 44px; border: none; background: transparent; color: #C4FF4D; font-size: 20px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: 'IBM Plex Mono', monospace; }
+.num-btn:hover { background: rgba(196,255,77,0.1); }
+.num-display { width: 48px; text-align: center; font-size: 18px; font-weight: 600; color: #fff; font-family: 'IBM Plex Mono', monospace; }
+.time-options { display: flex; gap: 8px; }
+.time-btn { flex: 1; padding: 10px 4px; border: 2px solid #2a2a3a; border-radius: 10px; background: transparent; color: #999; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+.time-btn:hover { border-color: #444; color: #ccc; }
+.time-btn.active { border-color: #C4FF4D; color: #C4FF4D; background: rgba(196,255,77,0.08); }
+.calc-btn {
+  width: 100%; padding: 16px; border: none; border-radius: 14px;
+  background: #C4FF4D; color: #0a0a0f; font-size: 16px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+  text-transform: uppercase; margin-top: 8px;
+  font-family: 'Artery Sans Extended', 'Segoe UI', sans-serif;
+}
+.calc-btn:hover { background: #d4ff77; transform: translateY(-1px); }
+.calc-btn:active { transform: translateY(0); }
+.result { display: none; background: #14141f; border-radius: 16px; padding: 24px 20px; margin-top: 16px; border: 2px solid #C4FF4D; text-align: center; }
+.result.show { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.result-total {
+  font-size: 36px; font-weight: 800; color: #C4FF4D; margin-bottom: 4px;
+  font-family: 'Artery Sans Extended', 'Segoe UI', sans-serif;
+}
+.result-label { font-size: 13px; color: #666; margin-bottom: 16px; }
+.result-breakdown { text-align: left; border-top: 1px solid #2a2a3a; padding-top: 16px; }
+.breakdown-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #aaa; }
+.breakdown-line span:last-child { color: #ddd; font-weight: 500; }
+.breakdown-line.discount { color: #ff6b6b; }
+.breakdown-line.discount span:last-child { color: #ff6b6b; }
+.breakdown-line.total-line { border-top: 1px solid #2a2a3a; margin-top: 8px; padding-top: 12px; color: #C4FF4D; font-weight: 700; font-size: 15px; }
+.breakdown-line.total-line span:last-child { color: #C4FF4D; }
+.note { margin-top: 12px; padding: 10px 14px; background: rgba(196,255,77,0.06); border-radius: 10px; font-size: 12px; color: #999; text-align: left; }
+.note strong { color: #C4FF4D; }
+.pkg-info { font-size: 12px; color: #666; margin-top: 10px; padding: 8px 12px; background: #1a1a25; border-radius: 8px; line-height: 1.6; }
+.pkg-info .hi { color: #C4FF4D; font-weight: 600; }
+.hidden { display: none !important; }
+.total-people { margin-top: 10px; font-size: 13px; color: #666; text-align: right; }
+.total-people span { color: #C4FF4D; font-weight: 600; }
+
+/* Desktop */
+@media (min-width: 768px) {
+  .container { max-width: 700px; padding: 40px 32px 60px; }
+  .logo h1 { font-size: 42px; letter-spacing: 10px; }
+  .logo p { font-size: 14px; letter-spacing: 3px; margin-top: 8px; }
+  .section { padding: 28px; margin-bottom: 20px; border-radius: 20px; }
+  .section-title { font-size: 15px; letter-spacing: 2px; margin-bottom: 18px; }
+  .toggle-btn { padding: 16px 12px; font-size: 16px; border-radius: 14px; }
+  .time-btn { padding: 14px 8px; font-size: 15px; border-radius: 12px; }
+  .number-row label { font-size: 16px; }
+  .num-btn { width: 52px; height: 52px; font-size: 24px; }
+  .num-display { width: 56px; font-size: 22px; }
+  .calc-btn { padding: 20px; font-size: 18px; border-radius: 16px; margin-top: 12px; }
+  .result { padding: 32px 28px; margin-top: 20px; border-radius: 20px; }
+  .result-total { font-size: 48px; }
+  .result-label { font-size: 15px; }
+  .breakdown-line { font-size: 15px; padding: 8px 0; }
+  .breakdown-line.total-line { font-size: 17px; }
+  .note { font-size: 14px; padding: 14px 18px; }
+  .pkg-info { font-size: 14px; padding: 12px 16px; }
+  .total-people { font-size: 15px; }
+}
+
+/* Large desktop */
+@media (min-width: 1200px) {
+  .container { max-width: 800px; padding: 50px 40px 70px; }
+  .logo h1 { font-size: 48px; }
+  .section { padding: 32px; }
+  .toggle-btn { padding: 18px 14px; font-size: 17px; }
+  .calc-btn { padding: 22px; font-size: 20px; }
+  .result-total { font-size: 56px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <h1>АРКАДА</h1>
+    <p>VR Park — Новокузнецк</p>
+  </div>
+  <div class="section">
+    <div class="section-title">Режим расчёта</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-group="mode" data-value="custom">Свой</button>
+      <button class="toggle-btn pkg-easy" data-group="mode" data-value="easy">Изи</button>
+      <button class="toggle-btn pkg-normal" data-group="mode" data-value="normal">Нормал</button>
+      <button class="toggle-btn pkg-hard" data-group="mode" data-value="hard">Хард</button>
+    </div>
+    <div id="pkgInfo" class="pkg-info hidden"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">День</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-group="day" data-value="weekday">Будний (Пн–Чт)</button>
+      <button class="toggle-btn" data-group="day" data-value="weekend">Вых (Пт–Вс) / Праздник</button>
+    </div>
+  </div>
+  <div id="customPlayers" class="section">
+    <div class="section-title">Игроки</div>
+    <div class="number-row">
+      <label>Без жилета</label>
+      <div class="number-controls">
+        <button class="num-btn" onclick="changeNum('noVest',-1)">−</button>
+        <div class="num-display" id="numNoVest">2</div>
+        <button class="num-btn" onclick="changeNum('noVest',1)">+</button>
+      </div>
+    </div>
+    <div class="number-row">
+      <label>С жилетом</label>
+      <div class="number-controls">
+        <button class="num-btn" onclick="changeNum('vest',-1)">−</button>
+        <div class="num-display" id="numVest">0</div>
+        <button class="num-btn" onclick="changeNum('vest',1)">+</button>
+      </div>
+    </div>
+    <div class="total-people">Всего: <span id="totalPeople">2</span> чел.</div>
+  </div>
+  <div id="pkgPlayers" class="section hidden">
+    <div class="section-title">Доп. игроки сверх пакета</div>
+    <div class="number-row">
+      <label>Кол-во</label>
+      <div class="number-controls">
+        <button class="num-btn" onclick="changeNum('extra',-1)">−</button>
+        <div class="num-display" id="numExtra">0</div>
+        <button class="num-btn" onclick="changeNum('extra',1)">+</button>
+      </div>
+    </div>
+  </div>
+  <div id="bdaySection" class="section">
+    <div class="section-title">День рождения</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-group="bday" data-value="no">Нет</button>
+      <button class="toggle-btn" data-group="bday" data-value="yes">Да, есть ДР! 🎉</button>
+    </div>
+  </div>
+  <div id="discountSection" class="section">
+    <div class="section-title">Доп. скидка (вручную)</div>
+    <div class="time-options">
+      <button class="time-btn active" data-group="discount" data-value="0">Нет</button>
+      <button class="time-btn" data-group="discount" data-value="10">10%</button>
+      <button class="time-btn" data-group="discount" data-value="20">20%</button>
+      <button class="time-btn" data-group="discount" data-value="30">30%</button>
+      <button class="time-btn" data-group="discount" data-value="50">50%</button>
+    </div>
+  </div>
+  <div id="gameTimeSection" class="section">
+    <div class="section-title">Время игры</div>
+    <div class="time-options">
+      <button class="time-btn active" data-group="gameTime" data-value="1">1 час</button>
+      <button class="time-btn" data-group="gameTime" data-value="2">2 часа</button>
+      <button class="time-btn" data-group="gameTime" data-value="3">3 часа</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Доп. время зоны отдыха</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-group="lounge" data-value="no">Нет</button>
+      <button class="toggle-btn" data-group="lounge" data-value="yes">Добавить</button>
+    </div>
+    <div id="loungeTime" class="hidden">
+      <div class="number-row" style="margin-top:10px">
+        <label>Часы</label>
+        <div class="number-controls">
+          <button class="num-btn" onclick="changeLH(-1)">−</button>
+          <div class="num-display" id="loungeH">1</div>
+          <button class="num-btn" onclick="changeLH(1)">+</button>
+        </div>
+      </div>
+      <div class="number-row">
+        <label>Минуты</label>
+        <div class="number-controls">
+          <button class="num-btn" onclick="changeLM(-30)">−</button>
+          <div class="num-display" id="loungeM">0</div>
+          <button class="num-btn" onclick="changeLM(30)">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="calc-btn" onclick="calc()">Рассчитать стоимость</button>
+  <div class="result" id="result">
+    <div class="result-total" id="resultTotal"></div>
+    <div class="result-label">итого</div>
+    <div class="result-breakdown" id="breakdown"></div>
+  </div>
+</div>
+<script>
+var S={mode:'custom',day:'weekday',noVest:2,vest:0,extra:0,bday:'no',discount:'0',gameTime:'1',lounge:'no',loungeTime:1};
+var PKG={easy:{name:'Изи',base:4,wd:6599,we:7699,exWd:1400,exWe:1900,desc:'4 игрока · без жилетов · 1 час'},normal:{name:'Нормал',base:4,wd:7799,we:8899,exWd:1700,exWe:2000,desc:'4 игрока · с жилетами · 1 час'},hard:{name:'Хард',base:8,wd:13199,we:15399,exWd:1400,exWe:1900,desc:'8 игроков · 1 час'}};
+var PR={weekday:{noVest:1000,vest:1300},weekend:{noVest:1200,vest:1500}};
+var LR=2000;
+document.querySelectorAll('.toggle-btn,.time-btn').forEach(function(b){b.addEventListener('click',function(){var g=b.dataset.group;S[g]=b.dataset.value;b.parentElement.querySelectorAll('.toggle-btn,.time-btn').forEach(function(x){x.classList.remove('active')});b.classList.add('active');if(g==='lounge')document.getElementById('loungeTime').classList.toggle('hidden',S.lounge==='no');if(g==='mode')updMode();});});
+function updMode(){var c=S.mode==='custom';document.getElementById('customPlayers').classList.toggle('hidden',!c);document.getElementById('gameTimeSection').classList.toggle('hidden',!c);document.getElementById('bdaySection').classList.toggle('hidden',!c);document.getElementById('discountSection').classList.toggle('hidden',!c);document.getElementById('pkgPlayers').classList.toggle('hidden',c);var info=document.getElementById('pkgInfo');if(!c){var p=PKG[S.mode];info.classList.remove('hidden');info.innerHTML='<span class="hi">'+p.name+':</span> '+p.desc+'<br>Пн–Чт: <span class="hi">'+fmt(p.wd)+' ₽</span> · Пт–Вс: <span class="hi">'+fmt(p.we)+' ₽</span><br>Доп. игрок: '+fmt(p.exWd)+' / '+fmt(p.exWe)+' ₽';}else info.classList.add('hidden');}
+function changeNum(t,d){S[t]=Math.max(0,Math.min(50,S[t]+d));if(t==='noVest')document.getElementById('numNoVest').textContent=S.noVest;if(t==='vest')document.getElementById('numVest').textContent=S.vest;if(t==='extra')document.getElementById('numExtra').textContent=S.extra;if(t==='noVest'||t==='vest')document.getElementById('totalPeople').textContent=S.noVest+S.vest;}
+var lH=1,lM=0;
+function changeLH(d){lH=Math.max(0,Math.min(5,lH+d));if(lH===0&&lM===0)lM=30;document.getElementById('loungeH').textContent=lH;S.loungeTime=lH+lM/60;}
+function changeLM(d){lM+=d;if(lM>=60){lM=0;lH++;}if(lM<0){if(lH>0){lH--;lM=30;}else lM=0;}if(lH===0&&lM===0)lM=30;document.getElementById('loungeH').textContent=lH;document.getElementById('loungeM').textContent=lM;S.loungeTime=lH+lM/60;}
+function calc(){var isWe=S.day==='weekend',hasL=S.lounge==='yes',lHrs=hasL?S.loungeTime:0;var html='',gc=0,ppl=0;if(S.mode==='custom'){var nv=S.noVest,v=S.vest;ppl=nv+v;var hrs=parseFloat(S.gameTime);if(ppl===0){alert('Укажите хотя бы 1 игрока');return;}var pk=isWe?'weekend':'weekday',nvP=PR[pk].noVest,vP=PR[pk].vest;var cNV=nvP*nv*hrs,cV=vP*v*hrs;gc=cNV+cV;if(nv>0)html+=ln('Без жилета: '+nv+' × '+hrs+' ч × '+fmt(nvP)+' ₽',fmt(cNV)+' ₽');if(v>0)html+=ln('С жилетом: '+v+' × '+hrs+' ч × '+fmt(vP)+' ₽',fmt(cV)+' ₽');}else{var p=PKG[S.mode],base=isWe?p.we:p.wd,exR=isWe?p.exWe:p.exWd,ex=S.extra;gc=base+exR*ex;ppl=p.base+ex;html+=ln('Пакет '+p.name+' ('+p.base+' чел)',fmt(base)+' ₽');if(ex>0)html+=ln('Доп. игроки: '+ex+' × '+fmt(exR)+' ₽',fmt(exR*ex)+' ₽');}var lc=hasL?LR*lHrs:0;if(hasL){var h=Math.floor(lHrs),m=Math.round((lHrs-h)*60);var ts=h>0&&m>0?h+' ч '+m+' мин':h>0?h+' ч':m+' мин';html+=ln('Доп. зона отдыха: '+ts,fmt(lc)+' ₽');}var gd=0,dn='';if(S.mode==='custom'){var bP=S.bday==='yes'?20:0,mP=parseInt(S.discount),pct=Math.max(bP,mP);if(pct>0){gd=gc*pct/100;if(bP>0&&mP>0)dn=pct+'% (макс. из ДР '+bP+'% и ручной '+mP+'%)';else if(bP>0)dn='20% скидка на ДР';else dn=mP+'% скидка';html+='<div class="breakdown-line discount"><span>'+dn+'</span><span>−'+fmt(gd)+' ₽</span></div>';}}var total=gc-gd+lc;html+='<div class="breakdown-line total-line"><span>ИТОГО ('+ppl+' чел)</span><span>'+fmt(total)+' ₽</span></div>';if(dn)html+='<div class="note"><strong>Скидка:</strong> '+dn+' (только на игру)</div>';document.getElementById('resultTotal').textContent=fmt(total)+' ₽';document.getElementById('breakdown').innerHTML=html;document.getElementById('result').classList.add('show');}
+function ln(l,r){return '<div class="breakdown-line"><span>'+l+'</span><span>'+r+'</span></div>';}
+function fmt(n){return Math.round(n).toLocaleString('ru-RU');}
+</script>
+<script>if(window.Telegram&&Telegram.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand()}</script>
+</body>
+</html>
